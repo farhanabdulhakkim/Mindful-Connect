@@ -1,17 +1,22 @@
-export function analyzeMood(text) {
-  const lower = text.toLowerCase();
+// src/utils/analyzeMood.js
+import { analyzeText } from "./sentimentAnalyze";
 
-  let connection = "Talk to a friend or loved one.";
-  let physical = "Do a light stretch.";
-  let mental = "Try 2 minutes of breathing.";
+const RECOMMENDATIONS = {
+  connection: "Call someone you trust or send a warm message.",
+  physical: "Try a gentle neck & shoulder stretch for 30 seconds.",
+  mental: "Do a guided calming 2-minute breathing exercise."
+};
 
-  if (lower.includes("lonely")) connection = "Call someone you trust.";
-  if (lower.includes("sad")) mental = "Try a calming music playlist.";
-  if (lower.includes("tired")) physical = "Try a quick relaxation stretch.";
-  if (lower.includes("overwhelmed")) mental = "Do a guided deep breathing session.";
-  if (lower.includes("anxious")) mental = "Try a grounding exercise (5-4-3-2-1).";
-  if (lower.includes("pain") || lower.includes("stiff"))
-    physical = "Neck & shoulder stretch (30 seconds).";
+export function analyzeMood(note) {
+  const analysis = analyzeText(note);
+  const main = analysis.mainCategory;
 
-  return { connection, physical, mental };
+  return {
+    analysis,
+    connection: RECOMMENDATIONS.connection,
+    physical: RECOMMENDATIONS.physical,
+    mental: RECOMMENDATIONS.mental,
+    primarySuggestion:
+      RECOMMENDATIONS[main] || RECOMMENDATIONS.mental
+  };
 }

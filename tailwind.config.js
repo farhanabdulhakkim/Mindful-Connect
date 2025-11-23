@@ -1,4 +1,5 @@
 module.exports = {
+  darkMode: "class", // <==== ADD THIS
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],

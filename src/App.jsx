@@ -1,50 +1,39 @@
-import { useState } from "react";
-import Header from "./components/Header";
-import MoodSurvey from "./components/MoodSurvey";
-import AnalysisLoader from "./components/AnalysisLoader";
-import RecommendationCard from "./components/RecommendationCard";
-import HistoryLog from "./components/HistoryLog";
-import { analyzeMood } from "./utils/analyzeMood";
-import { db } from "./firebase";
-import { addDoc, collection } from "firebase/firestore";
+// src/App.jsx
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import LandingPage from "./components/LandingPage";
+import MainApp from "./pages/MainApp";
+import SignInModal from "./components/SignInModal";
+import { observeAuth } from "./utils/auth";
+import { AnimatePresence, motion } from "framer-motion";
 
-export default function App() {
-  const [phase, setPhase] = useState("survey");
-  const [results, setResults] = useState(null);
+export default function AppWrapper() {
+  return (
+    <Router>
+      <App />
+    </Router>
+  );
+}
 
-  const handleSurvey = async ({ mood, note }) => {
-    setPhase("loading");
+function App() {
+  const [user, setUser] = useState(null);
+  const [showSignIn, setShowSignIn] = useState(false);
 
-    const analysis = analyzeMood(note);
-
-    await addDoc(collection(db, "moodLogs"), {
-      mood,
-      note,
-      time: new Date().toLocaleString()
-    });
-
-    setTimeout(() => {
-      setResults(analysis);
-      setPhase("recommendation");
-    }, 1200);
-  };
+  useEffect(() => {
+    const unsub = observeAuth((u) => setUser(u));
+    return () => unsub();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-blue-100 p-6">
-      <Header />
+    <>
+      <AnimatePresence>
+        {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
+      </AnimatePresence>
 
-      {phase === "survey" && <MoodSurvey onSubmit={handleSurvey} />}
-      {phase === "loading" && <AnalysisLoader />}
-
-      {phase === "recommendation" && results && (
-        <div className="max-w-xl mx-auto space-y-4 mt-6">
-          <RecommendationCard title="Connection" text={results.connection} />
-          <RecommendationCard title="Physical" text={results.physical} />
-          <RecommendationCard title="Mental" text={results.mental} />
-        </div>
-      )}
-
-      <HistoryLog />
-    </div>
+      <Routes>
+        <Route path="/" element={<LandingPage onBegin={() => window.location.href = "/app"} onOpenSignIn={() => setShowSignIn(true)} />} />
+        <Route path="/app" element={<MainApp user={user} onOpenSignIn={() => setShowSignIn(true)} />} />
+      </Routes>
+    </>
   );
 }
